@@ -28,10 +28,12 @@ func NewExactMux() *ExactMux {
 func (m *ExactMux) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request, handler, err := m.handler(request.Method, request.URL.Path, request); err == nil {
 		handler.ServeHTTP(writer, request)
+		return
 	}
 
 	if m.notFoundHandler != nil {
 		m.notFoundHandler.ServeHTTP(writer, request)
+		return
 	}
 
 	writer.WriteHeader(404)
@@ -177,6 +179,9 @@ func (m *ExactMux) handler(method string, path string, original *http.Request) (
 
 func FromContext(ctx context.Context, key string) (value string, ok bool) {
 	params, ok := ctx.Value(pathParamsKey).(map[string]string)
+	if !ok {
+		return "", false
+	}
 	param, exists := params[key]
 	return param, exists
 }
